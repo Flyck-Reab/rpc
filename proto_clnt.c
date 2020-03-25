@@ -9,10 +9,13 @@
 /* Default timeout can be changed using clnt_control() */
 static struct timeval TIMEOUT = { 25, 0 };
 
+void modifierTimeout(CLIENT *clnt);
+
 ls_res *
 ls_1(type_nom *argp, CLIENT *clnt)
 {
 	static ls_res clnt_res;
+	modifierTimeout(clnt);
 
 	memset((char *)&clnt_res, 0, sizeof(clnt_res));
 	if (clnt_call (clnt, LS,
@@ -28,6 +31,7 @@ read_res *
 read_1(type_nom *argp, CLIENT *clnt)
 {
 	static read_res clnt_res;
+	modifierTimeout(clnt);
 
 	memset((char *)&clnt_res, 0, sizeof(clnt_res));
 	if (clnt_call (clnt, READ,
@@ -43,6 +47,7 @@ int *
 write_1(write_parm *argp, CLIENT *clnt)
 {
 	static int clnt_res;
+	modifierTimeout(clnt);
 
 	memset((char *)&clnt_res, 0, sizeof(clnt_res));
 	if (clnt_call (clnt, WRITE,
@@ -52,4 +57,11 @@ write_1(write_parm *argp, CLIENT *clnt)
 		return (NULL);
 	}
 	return (&clnt_res);
+}
+
+void modifierTimeout(CLIENT *clnt){
+	struct timeval delai;
+	delai.tv_sec=60;
+	delai.tv_usec=0;
+	clnt_control(clnt, CLSET_TIMEOUT,(char*) &delai);
 }

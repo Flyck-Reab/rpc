@@ -119,10 +119,3 @@ extern bool_t xdr_write_parm ();
 
 #endif /* !_PROTO_H_RPCGEN */
 
-
-extern type_nom getNom(const cell_nom* cell);
-extern cell_nom* getCell(const ls_res* ls);
-extern int getErreur(const ls_res* ls);
-extern cell_nom* getNextCell(const cell_nom* cell); 
-
-

@@ -118,23 +118,3 @@ xdr_write_parm (XDR *xdrs, write_parm *objp)
 		 return FALSE;
 	return TRUE;
 }
-
-type_nom getNom(const cell_nom* cell)
-{
-	return cell->nom;
-}
-
-cell_nom* getCell(const ls_res* ls)
-{
-	return ls->ls_res_u.liste;
-}
-
-int getErreur(const ls_res* ls)
-{
-	return ls->erreur;
-}
-
-cell_nom* getNextCell(const cell_nom* cell)
-{
-	return cell->suivant;
-}

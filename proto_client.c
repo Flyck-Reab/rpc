@@ -6,6 +6,7 @@
 
 #include "proto.h"
 
+
 liste_bloc lecturefichier();
 
 void
@@ -25,6 +26,7 @@ proto_gestion_fichier_1(char *host, char *type_commande, char *fichier_distant, 
 			clnt_pcreateerror (host);
 			exit (1);
 		}
+		clnt->cl_auth = authunix_create_default();
 	#endif	/* DEBUG */
 
 	if(strncmp(type_commande,"ls",2)==0)
@@ -41,12 +43,14 @@ proto_gestion_fichier_1(char *host, char *type_commande, char *fichier_distant, 
 		{
 			printf("Contenu du repertoire \"%s\".\n\n", fichier_distant);
 			cell_nom* celluleResultat = result_1->ls_res_u.liste;
+				printf("=======================================================\n");
 			while(celluleResultat!=NULL)
 			{
 				printf("%s\n", celluleResultat->nom);
 				celluleResultat = celluleResultat->suivant;
 			}
-			printf("\nLe programme s'est terminé sans erreur.\n");
+			printf("=======================================================\n");
+			printf("\nLe programme s'est terminé sans erreur.\n", erreur);
 		}
 		else
 		{
@@ -70,12 +74,14 @@ proto_gestion_fichier_1(char *host, char *type_commande, char *fichier_distant, 
 			{
 				printf("Contenu du fichier \"%s\".\n\n", fichier_distant);
 				cell_bloc* celluleResultat = result_2->read_res_u.fichier;
+				printf("=======================================================\n");
 				while(celluleResultat!=NULL)
 				{
 					printf("%s", celluleResultat->bloc);
 					celluleResultat = celluleResultat->suivant;
 				}
-				printf("\n\nLe programme s'est terminé sans erreur.\n");
+				printf("=======================================================\n");
+				printf("\n\nLe programme s'est terminé sans erreur.\n", erreur);
 			}
 			else
 			{
@@ -101,7 +107,7 @@ proto_gestion_fichier_1(char *host, char *type_commande, char *fichier_distant, 
 				if(erreur==0)
 				{
 					printf("Contenu du fichier local \"%s\" ecrit sur le fichier distant \"%s\".\n\n", fichier_source,fichier_distant);
-					printf("Le programme s'est terminé sans erreur.\n");
+					printf("Le programme s'est terminé sans erreur.\n", erreur);
 				}
 				else
 				{
