@@ -9,12 +9,14 @@
 /* Default timeout can be changed using clnt_control() */
 static struct timeval TIMEOUT = { 25, 0 };
 
+//Methode permettant de modifier le TIMEOUT
 void modifierTimeout(CLIENT *clnt);
 
 ls_res *
 ls_1(type_nom *argp, CLIENT *clnt)
 {
 	static ls_res clnt_res;
+	//modification du timeout avant l'appel au client
 	modifierTimeout(clnt);
 
 	memset((char *)&clnt_res, 0, sizeof(clnt_res));
@@ -31,6 +33,7 @@ read_res *
 read_1(type_nom *argp, CLIENT *clnt)
 {
 	static read_res clnt_res;
+	//modification du timeout avant l'appel au client
 	modifierTimeout(clnt);
 
 	memset((char *)&clnt_res, 0, sizeof(clnt_res));
@@ -47,6 +50,7 @@ int *
 write_1(write_parm *argp, CLIENT *clnt)
 {
 	static int clnt_res;
+	//modification du timeout avant l'appel au client
 	modifierTimeout(clnt);
 
 	memset((char *)&clnt_res, 0, sizeof(clnt_res));
@@ -60,8 +64,10 @@ write_1(write_parm *argp, CLIENT *clnt)
 }
 
 void modifierTimeout(CLIENT *clnt){
+	//Alongement du delai de timeout de 25 à 60 secondes
 	struct timeval delai;
 	delai.tv_sec=60;
 	delai.tv_usec=0;
+	//Validation de l'alongement
 	clnt_control(clnt, CLSET_TIMEOUT,(char*) &delai);
 }

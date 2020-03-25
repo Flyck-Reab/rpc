@@ -26,24 +26,31 @@ proto_gestion_fichier_1(char *host, char *type_commande, char *fichier_distant, 
 			clnt_pcreateerror (host);
 			exit (1);
 		}
+		//authentification du client : niveau de securité basique, voire insuffisant.
 		clnt->cl_auth = authunix_create_default();
 	#endif	/* DEBUG */
 
-	if(strncmp(type_commande,"ls",2)==0)
+	//si la commande envoyée est ls
+	if(strlen(type_commande)==2 && strncmp(type_commande,"ls",2)==0)
 	{
 		printf("-----------------Debut du programme ls-----------------\n\n");
+		//Appel à la fonction distante
 		result_1 = ls_1(&ls_1_arg, clnt);
+		//Si l'appel à echoué
 		if (result_1 == (ls_res *) NULL) 
 		{
 			clnt_perror (clnt, "call failed");
 		}
 
+		//Si il n'y a pas d'erreur
 		int erreur = result_1->erreur;
 		if (erreur == 0 )
 		{
 			printf("Contenu du repertoire \"%s\".\n\n", fichier_distant);
+			//Initialisation de la premiere cellule de parcour
 			cell_nom* celluleResultat = result_1->ls_res_u.liste;
-				printf("=======================================================\n");
+			printf("=======================================================\n");
+			//Affichage du résultat par le parcour des cellules
 			while(celluleResultat!=NULL)
 			{
 				printf("%s\n", celluleResultat->nom);
@@ -52,30 +59,37 @@ proto_gestion_fichier_1(char *host, char *type_commande, char *fichier_distant, 
 			printf("=======================================================\n");
 			printf("\nLe programme s'est terminé sans erreur.\n", erreur);
 		}
+		//Il y a eu une erreur
 		else
 		{
 			printf("Erreur %d lors de l'execution sur la machine distante, vérifiez les paramètres\n", erreur);
 		}
+		//Liberation de la zone memoire de la valeur de retour
 		xdr_free((xdrproc_t)xdr_ls_res,(char*)&result_1);
 		printf("\n------------------Fin du programme ls------------------\n\n\n");
 	}
 	else 
 	{
-		if(strncmp(type_commande,"read",4)==0)
+		//Si la commande est read
+		if(strlen(type_commande)==4 && strncmp(type_commande,"read",4)==0)
 		{
 			printf("----------------Debut du programme read----------------\n\n");
+			//appel à la fonction read
 			result_2 = read_1(&read_1_arg, clnt);
 			if (result_2 == (read_res *) NULL) 
 			{
 				clnt_perror (clnt, "call failed");
 			}
 
+			//Si il n'y a pas d'erreur
 			int erreur = result_2->erreur;
 			if (erreur == 0 )
 			{
 				printf("Contenu du fichier \"%s\".\n\n", fichier_distant);
+				//Initialisation de la premiere cellule de parcour
 				cell_bloc* celluleResultat = result_2->read_res_u.fichier;
 				printf("=======================================================\n");
+				//Affichage du résultat par le parcour des cellules
 				while(celluleResultat!=NULL)
 				{
 					printf("%s", celluleResultat->bloc);
@@ -84,42 +98,57 @@ proto_gestion_fichier_1(char *host, char *type_commande, char *fichier_distant, 
 				printf("\n=======================================================\n");
 				printf("\n\nLe programme s'est terminé sans erreur.\n", erreur);
 			}
+			//Si il y a une erreur
 			else
 			{
 				printf("Erreur %d lors de l'execution, vérifiez les paramètres\n", erreur);
 			}
-			xdr_free((xdrproc_t)xdr_read_res,(char*)&result_2);
+			//Liberation de la zone memoire de la valeur de retour
+			xdr_free((xdrproc_t)xdr_liste_bloc,(char*)&result_2);
 			printf("\n-----------------Fin du programme read-----------------\n\n\n");
 		}
 		else
 		{
-			if(strncmp(type_commande,"write",5)==0)
+			//si la commande est write
+			if(strlen(type_commande)==5 && strncmp(type_commande,"write",5)==0)
 			{
 				printf("----------------Debut du programme write---------------\n\n");
+				//Nom du fichier à ecrire
 				write_1_arg.nom=fichier_distant;
+				//Choix d'ecraser le contenu du fichier
 				write_1_arg.ecraser=ecraser;
+				//Creation d'une liste chainée sur le fichier source client 
 				write_1_arg.donnees=lecturefichier(fichier_source);
+
+				//appel de la fonction write
 				result_3 = write_1(&write_1_arg, clnt);
 				if (result_3 ==  NULL) 
 				{
 					clnt_perror (clnt, "call failed");
 				}
 
+				//Si il n'y a pas d'erreur
 				int erreur = *result_3;
 				if(erreur==0)
 				{
 					printf("Contenu du fichier local \"%s\" ecrit sur le fichier distant \"%s\".\n\n", fichier_source,fichier_distant);
 					printf("Le programme s'est terminé sans erreur.\n", erreur);
 				}
+				//Si il y a une erreur
 				else
 				{
 					printf("Erreur %d lors de l'execution, vérifiez les paramètres\n", erreur);
 				}
+				//Liberation de la zone memoire de la valeur de retour
+				xdr_free((xdrproc_t)xdr_read_res,(char*)&write_1_arg.donnees);
 				printf("\n----------------Fin du programme write-----------------\n\n\n");
 			}
 			else
 			{
-				perror("Commande inconnue");
+				//Si la commande est fausse, ecriture d'une aide
+				printf("\nCommande inconnue.\n");
+				printf ("\nUsage 1 : IP read fichier_distant \nUsage 2 : IP ls repertoire_distant\nUsage 3 : IP write fichier_source ecraser fichier_distant,\necraser : \n0  pour NON \n1 pour OUI\n\n");
+			
 			}
 		}
 	}
@@ -138,6 +167,7 @@ main (int argc, char *argv[])
 	bool_t ecraser;
 	char *fichier_source;
 
+	//Pour ls et read, 4 arguments sont necessaires
 	if (argc == 4)
 	{
 		host = argv[1];
@@ -147,6 +177,7 @@ main (int argc, char *argv[])
 	}
 	else
 	{
+		//Pour write, les 6 arguments sont necessaires
 		if(argc == 6)
 		{
 			host = argv[1];
@@ -158,6 +189,7 @@ main (int argc, char *argv[])
 		}	
 		else
 		{	
+			//Si il manque des arguments, on indique les arguments à rendre
 			printf ("!!! Il manque des arguments !!!\nUsage 1 : IP read fichier_distant \nUsage 2 : IP ls repertoire_distant\nUsage 3 : IP write fichier_source ecraser fichier_distant,\necraser : \n0  pour NON \n1 pour OUI\n\n");
 			exit (1);
 		}
@@ -167,13 +199,11 @@ main (int argc, char *argv[])
 
 liste_bloc lecturefichier(char *fichier)
 {
-	FILE *file;
-	struct dirent *infosReadDir;
-
-	liste_bloc resultatTmp;
-	cell_bloc *celluleCourante;
-	cell_bloc *celluleSuivante;
-	char buffer[MAXBLOC];
+	FILE *file;						//Pointeur vers le fichier à lire
+	liste_bloc resultatTmp;			//Initialisation de bloc de contenu
+	cell_bloc *celluleCourante;		//Bloc de contenu principal
+	cell_bloc *celluleSuivante;		//Bloc de contenu secondaire
+	char buffer[MAXBLOC];			//Liste de charactères à ecrire dans la cellule
 
 	//Ouverture du fichier
 	file = fopen(fichier,"r");
@@ -199,6 +229,7 @@ liste_bloc lecturefichier(char *fichier)
 
 		while (fgets(buffer, MAXBLOC, file)!=NULL)
 		{
+
 				celluleCourante->suivant=celluleSuivante;
 
 				celluleCourante=celluleSuivante;
@@ -208,7 +239,6 @@ liste_bloc lecturefichier(char *fichier)
 				strcpy(celluleCourante->bloc, buffer);
 				celluleSuivante=calloc(MAXBLOC,sizeof(char));
 		}
-		strcat(celluleCourante->bloc,"");
 		fclose(file);
 	}
 

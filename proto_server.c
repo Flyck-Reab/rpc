@@ -12,14 +12,18 @@ int connexionValide(struct svc_req *rqstp)
 {
 	switch(rqstp->rq_cred.oa_flavor)
 	{
+		//Si le client est authentifié
 		case AUTH_UNIX:
 			printf("Authentifié\n");
+			//Affichage des informations du client
 			struct authunix_parms* aup = (struct authunix_parms *) rqstp->rq_clntcred;
 			printf("uid serveur : %d \nuid client : %d\n", getuid(), aup->aup_uid);
 			printf("gid client : %d\n", aup->aup_gids);
 			printf("hostname client : %s\n\n", aup->aup_machname);
+			//Code erreur 2 retourné afin de garder une trace de l'execution
 			return 2;
 		default :
+			//Code erreur 3 retourné
 			printf("Non authentifié\n");
 			return 3;
 	}
@@ -31,14 +35,18 @@ ls_1_svc(type_nom *argp, struct svc_req *rqstp)
 {
 	printf("-----------------Debut du programme ls---------------\n\n");
 	static ls_res  result;
+	//Liberation des données dans la variable
 	xdr_free((xdrproc_t)xdr_ls_res,(char*)&result);
+
+	//Initialisation de la variable de retour
 	ls_res resultatTmp;
 	resultatTmp.erreur=1;
 
+	//verification que la connexion est authentifiée
 	resultatTmp.erreur=connexionValide(rqstp);
 	if(resultatTmp.erreur<=2)
 	{
-
+		//Initialisation des varibles de parcour/sauvegarde du fichier
 		DIR *directory;
 		struct dirent *infosReadDir;
 		char* dossier = *argp;
@@ -100,13 +108,16 @@ read_1_svc(type_nom *argp, struct svc_req *rqstp)
 	printf("----------------Debut du programme read----------------\n\n");
 	static read_res  result;
 	xdr_free((xdrproc_t)xdr_read_res,(char*)&result);
+	//Initialisation de la variable de retour
 	read_res resultatTmp;
 	resultatTmp.erreur=1;
 	
+	//verification de l'authentification
 	resultatTmp.erreur=connexionValide(rqstp);
 	if(resultatTmp.erreur<=2)
 	{
 
+		//Initialisation des varibles de parcour/sauvegarde du document
 		DIR *directory;
 		FILE *file;
 		struct dirent *infosReadDir;
@@ -116,6 +127,7 @@ read_1_svc(type_nom *argp, struct svc_req *rqstp)
 		cell_bloc *celluleSuivante;
 		char buffer[MAXBLOC];
 
+		//Verification que le document est un fichier et non un repertoire
 		directory = opendir(fichier);
 		if(directory!=NULL){
 			closedir(directory);
@@ -172,17 +184,20 @@ write_1_svc(write_parm *argp, struct svc_req *rqstp)
 {
 	printf("----------------Debut du programme write---------------\n\n");
 	static int  result;
+	//Initialisation de la variable de retour
 	int erreur=1;
-
+	
+	//verification de l'authentification
+	erreur=connexionValide(rqstp);
 	if(erreur<=2)
 	{
 
-		erreur=connexionValide(rqstp);
-
+		//Initialisation des variables
 		FILE *file;
 		char* fichier=argp->nom;
 		cell_bloc *celluleCourante = argp->donnees;
 
+		//Choix d'ecraser le fichier à ecrire
 		if(argp->ecraser)
 		{
 			file = fopen(fichier,"w");
@@ -192,6 +207,7 @@ write_1_svc(write_parm *argp, struct svc_req *rqstp)
 			file = fopen(fichier,"a");
 		}
 		
+		//ouverture du fichier
 		if(file==NULL)
 		{
 			perror("Erreur d'ouverture du fichier ");
@@ -200,6 +216,7 @@ write_1_svc(write_parm *argp, struct svc_req *rqstp)
 		}
 		else
 		{
+			//Parcour de la liste chainée donnée en paramètres et copie dans le fichier
 			while(celluleCourante!=NULL)
 			{	
 				fputs(celluleCourante->bloc,file);
