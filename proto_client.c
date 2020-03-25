@@ -46,7 +46,7 @@ proto_gestion_fichier_1(char *host, char *type_commande, char *fichier_distant, 
 				printf("%s\n", celluleResultat->nom);
 				celluleResultat = celluleResultat->suivant;
 			}
-			printf("\nLe programme s'est terminé sans erreur.\n", erreur);
+			printf("\nLe programme s'est terminé sans erreur.\n");
 		}
 		else
 		{
@@ -75,7 +75,7 @@ proto_gestion_fichier_1(char *host, char *type_commande, char *fichier_distant, 
 					printf("%s", celluleResultat->bloc);
 					celluleResultat = celluleResultat->suivant;
 				}
-				printf("\n\nLe programme s'est terminé sans erreur.\n", erreur);
+				printf("\n\nLe programme s'est terminé sans erreur.\n");
 			}
 			else
 			{
@@ -101,7 +101,7 @@ proto_gestion_fichier_1(char *host, char *type_commande, char *fichier_distant, 
 				if(erreur==0)
 				{
 					printf("Contenu du fichier local \"%s\" ecrit sur le fichier distant \"%s\".\n\n", fichier_source,fichier_distant);
-					printf("Le programme s'est terminé sans erreur.\n", erreur);
+					printf("Le programme s'est terminé sans erreur.\n");
 				}
 				else
 				{
