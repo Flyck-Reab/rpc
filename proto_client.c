@@ -75,7 +75,7 @@ proto_gestion_fichier_1(char *host, char *type_commande, char *fichier_distant, 
 					printf("%s", celluleResultat->bloc);
 					celluleResultat = celluleResultat->suivant;
 				}
-				printf("\nLe programme s'est terminé sans erreur.\n", erreur);
+				printf("\n\nLe programme s'est terminé sans erreur.\n", erreur);
 			}
 			else
 			{
@@ -172,7 +172,7 @@ liste_bloc lecturefichier(char *fichier)
 	if(file==NULL)
 	{
 		perror("Erreur d'ouverture du fichier ");
-		printf("Erreur d'ouverture du fichier : %s \n",fichier);
+		printf("Fichier : \"%s\" \n",fichier);
 		exit(1);
 	}
 	//Si le fichier est ouvert sans erreur
@@ -189,18 +189,18 @@ liste_bloc lecturefichier(char *fichier)
 		//initialisation de resultatTmp
 		resultatTmp=celluleCourante;
 
-		while (!feof(file))
+		while (fgets(buffer, MAXBLOC, file)!=NULL)
 		{
-			celluleCourante->suivant=celluleSuivante;
+				celluleCourante->suivant=celluleSuivante;
 
-			celluleCourante=celluleSuivante;
-			celluleCourante->bloc= calloc(MAXBLOC,sizeof(char));
-			celluleCourante->suivant=NULL;
+				celluleCourante=celluleSuivante;
+				celluleCourante->bloc= calloc(MAXBLOC,sizeof(char));
+				celluleCourante->suivant=NULL;
 
-			fgets(buffer, MAXBLOC, file);
-			strcpy(celluleCourante->bloc, buffer);
-			celluleSuivante=calloc(MAXBLOC,sizeof(char));
+				strcpy(celluleCourante->bloc, buffer);
+				celluleSuivante=calloc(MAXBLOC,sizeof(char));
 		}
+		strcat(celluleCourante->bloc,"");
 		fclose(file);
 	}
 

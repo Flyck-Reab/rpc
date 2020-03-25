@@ -34,7 +34,7 @@ ls_1_svc(type_nom *argp, struct svc_req *rqstp)
 	if(directory==NULL)
 	{
 		perror("Erreur d'ouverture du dossier ");
-		printf("Erreur d'ouverture du dossier : %s \n",dossier);
+		printf("Dossier : \"%s\" \n",dossier);
 		resultatTmp.erreur=2;
 	}
 	
@@ -71,8 +71,8 @@ ls_1_svc(type_nom *argp, struct svc_req *rqstp)
 	}
 
 	result = resultatTmp;
-	printf("Erreur retournée (0 = OK) : %d\n", result.erreur);
-	printf("\n------------------Fin du programme ls------------------\n\n");
+	printf("\nErreur retournée (0 = OK) : %d\n", result.erreur);
+	printf("\n\n------------------Fin du programme ls------------------\n\n");
 	return &result;	
 }
 
@@ -121,7 +121,7 @@ read_1_svc(type_nom *argp, struct svc_req *rqstp)
 			//initialisation de resultatTmp
 			resultatTmp.read_res_u.fichier=celluleCourante;
 
-			while (!feof(file))
+			while (fgets(buffer, MAXBLOC, file)!=NULL)
 			{
 				celluleCourante->suivant=celluleSuivante;
 
@@ -129,8 +129,8 @@ read_1_svc(type_nom *argp, struct svc_req *rqstp)
 				celluleCourante->bloc= calloc(MAXBLOC,sizeof(char));
 				celluleCourante->suivant=NULL;
 
-				fgets(buffer, MAXBLOC, file);
 				strcpy(celluleCourante->bloc, buffer);
+				printf("%s", celluleCourante->bloc);
 
 				celluleSuivante=calloc(MAXBLOC,sizeof(char));
 			}
@@ -139,7 +139,7 @@ read_1_svc(type_nom *argp, struct svc_req *rqstp)
 		}
 	}
 	result = resultatTmp;
-	printf("Erreur retournée (0 = OK) : %d\n", result.erreur);
+	printf("\n\nErreur retournée (0 = OK) : %d\n", result.erreur);
 	printf("\n-----------------Fin du programme read-----------------\n\n");
 	return &result;
 }
@@ -166,7 +166,7 @@ write_1_svc(write_parm *argp, struct svc_req *rqstp)
 	if(file==NULL)
 	{
 		perror("Erreur d'ouverture du fichier ");
-		printf("Erreur d'ouverture du fichier : %s \n",fichier);
+		printf("Fichier : \"%s\" \n",fichier);
 		erreur=2;
 	}
 	else
@@ -174,15 +174,14 @@ write_1_svc(write_parm *argp, struct svc_req *rqstp)
 		while(celluleCourante!=NULL)
 		{	
 			fputs(celluleCourante->bloc,file);
-			printf("%s\n", celluleCourante->bloc);
+			printf("%s", celluleCourante->bloc);
 			celluleCourante=celluleCourante->suivant;
 		}
 		erreur=0;
 	}
-	fputs("\n",file);
 	fclose(file);
 	result=erreur;
-	printf("Erreur retournée (0 = OK) : %d\n", result);
+	printf("\n\nErreur retournée (0 = OK) : %d\n", result);
 	printf("\n----------------Fin du programme write-----------------\n\n");
 	return &result;
 }
