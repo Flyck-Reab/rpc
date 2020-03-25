@@ -31,6 +31,7 @@ ls_1_svc(type_nom *argp, struct svc_req *rqstp)
 {
 	printf("-----------------Debut du programme ls---------------\n\n");
 	static ls_res  result;
+	xdr_free((xdrproc_t)xdr_ls_res,(char*)&result);
 	ls_res resultatTmp;
 	resultatTmp.erreur=1;
 
@@ -98,6 +99,7 @@ read_1_svc(type_nom *argp, struct svc_req *rqstp)
 {
 	printf("----------------Debut du programme read----------------\n\n");
 	static read_res  result;
+	xdr_free((xdrproc_t)xdr_read_res,(char*)&result);
 	read_res resultatTmp;
 	resultatTmp.erreur=1;
 	

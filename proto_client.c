@@ -56,6 +56,7 @@ proto_gestion_fichier_1(char *host, char *type_commande, char *fichier_distant, 
 		{
 			printf("Erreur %d lors de l'execution sur la machine distante, vérifiez les paramètres\n", erreur);
 		}
+		xdr_free((xdrproc_t)xdr_ls_res,(char*)&result_1);
 		printf("\n------------------Fin du programme ls------------------\n\n\n");
 	}
 	else 
@@ -80,13 +81,14 @@ proto_gestion_fichier_1(char *host, char *type_commande, char *fichier_distant, 
 					printf("%s", celluleResultat->bloc);
 					celluleResultat = celluleResultat->suivant;
 				}
-				printf("=======================================================\n");
+				printf("\n=======================================================\n");
 				printf("\n\nLe programme s'est terminé sans erreur.\n", erreur);
 			}
 			else
 			{
 				printf("Erreur %d lors de l'execution, vérifiez les paramètres\n", erreur);
 			}
+			xdr_free((xdrproc_t)xdr_read_res,(char*)&result_2);
 			printf("\n-----------------Fin du programme read-----------------\n\n\n");
 		}
 		else
