@@ -35,8 +35,6 @@ ls_1_svc(type_nom *argp, struct svc_req *rqstp)
 {
 	printf("-----------------Debut du programme ls---------------\n\n");
 	static ls_res  result;
-	//Liberation des données dans la variable
-	xdr_free((xdrproc_t)xdr_ls_res,(char*)&result);
 
 	//Initialisation de la variable de retour
 	ls_res resultatTmp;
@@ -97,6 +95,8 @@ ls_1_svc(type_nom *argp, struct svc_req *rqstp)
 		}
 	}
 	result = resultatTmp;
+	//Liberation des données dans la variable
+	xdr_free((xdrproc_t)xdr_type_nom,(char*)argp);
 	printf("\nErreur retournée (0 = OK) : %d\n", result.erreur);
 	printf("\n\n------------------Fin du programme ls------------------\n\n");
 	return &result;	
@@ -107,7 +107,6 @@ read_1_svc(type_nom *argp, struct svc_req *rqstp)
 {
 	printf("----------------Debut du programme read----------------\n\n");
 	static read_res  result;
-	xdr_free((xdrproc_t)xdr_read_res,(char*)&result);
 	//Initialisation de la variable de retour
 	read_res resultatTmp;
 	resultatTmp.erreur=1;
@@ -174,6 +173,7 @@ read_1_svc(type_nom *argp, struct svc_req *rqstp)
 		}
 	}
 	result = resultatTmp;
+	xdr_free((xdrproc_t)xdr_type_nom,(char*)argp);
 	printf("\n\nErreur retournée (0 = OK) : %d\n", result.erreur);
 	printf("\n-----------------Fin du programme read-----------------\n\n");
 	return &result;
@@ -227,8 +227,8 @@ write_1_svc(write_parm *argp, struct svc_req *rqstp)
 		}
 	}
 	result=erreur;
+	xdr_free((xdrproc_t)xdr_write_parm,(char*)argp);
 	printf("\n\nErreur retournée (0 = OK) : %d\n", result);
 	printf("\n----------------Fin du programme write-----------------\n\n");
 	return &result;
 }
-
