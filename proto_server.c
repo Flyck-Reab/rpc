@@ -18,82 +18,75 @@ int connexionValide(struct svc_req *rqstp)
 			//Affichage des informations du client
 			struct authunix_parms* aup = (struct authunix_parms *) rqstp->rq_clntcred;
 			printf("uid serveur : %d \nuid client : %d\n", getuid(), aup->aup_uid);
-			printf("gid client : %d\n", aup->aup_gids);
+			printf("gid client : %d\n", aup->aup_gid);
 			printf("hostname client : %s\n\n", aup->aup_machname);
-			//Code erreur 2 retourné afin de garder une trace de l'execution
-			return 2;
+			//Code erreur 1 : pas d'erreur mais programme non terminé
+			return 1;
 		default :
-			//Code erreur 3 retourné
+			//Code erreur 2 retourné
 			printf("Non authentifié\n");
-			return 3;
+			return 2;
 	}
 }
 
 
-ls_res *
-ls_1_svc(type_nom *argp, struct svc_req *rqstp)
-{
+ls_res * ls_1_svc(type_nom *argp, struct svc_req *rqstp){
 	printf("-----------------Debut du programme ls---------------\n\n");
+	//Initialisation de la variable de retour, erreur = 1 : pas d'erreur mais execution non terminée
 	static ls_res  result;
-
-	//Initialisation de la variable de retour
 	ls_res resultatTmp;
 	resultatTmp.erreur=1;
-
 	//verification que la connexion est authentifiée
 	resultatTmp.erreur=connexionValide(rqstp);
-	if(resultatTmp.erreur<=2)
+	if(resultatTmp.erreur>1)
 	{
-		//Initialisation des varibles de parcour/sauvegarde du fichier
-		DIR *directory;
-		struct dirent *infosReadDir;
-		char* dossier = *argp;
-
-		cell_nom *celluleCourante;
-		cell_nom *celluleSuivante;
-
-		//Ouverture du fichier
-		// directory = opendir((char *)argp);
-		directory = opendir(dossier);
-		if(directory==NULL)
-		{
-			perror("Erreur d'ouverture du dossier ");
-			printf("Dossier : \"%s\" \n",dossier);
-			resultatTmp.erreur=4;
-		}
-		
-		//Si le fichier est ouvert sans erreur
-		else
-		{
-			//initialisation de cellule courante
-			celluleCourante=malloc(10*sizeof(char));
-			//initialisation de la cellule suivante
-			celluleSuivante=celluleCourante;
-
-			//initialisation de resultatTmp
-			resultatTmp.ls_res_u.liste=celluleCourante;
-		
-
-			while ((infosReadDir = readdir(directory)) != NULL)
-			{	
-				celluleCourante->suivant=celluleSuivante;
-				celluleCourante=celluleSuivante;
-
-				//On prepare la cellule a recevoir les valeurs
-				celluleCourante->nom=calloc(MAXNOM,sizeof(char));
-				celluleCourante->suivant=NULL;		
-
-				//On ecrit les valeurs
-				strcpy(celluleCourante->nom, infosReadDir->d_name);
-
-				//initialisation de la cellule suivante
-				celluleSuivante=malloc(10*sizeof(char));
-
-			}
-			closedir(directory);	
-			resultatTmp.erreur=0;
-		}
+		result = resultatTmp;
+		printf("\nErreur retournée (0 = OK) : %d\n", result.erreur);
+		return &result;
 	}
+	//Initialisation des varibles de parcour/sauvegarde du fichier
+	DIR *directory;
+	struct dirent *infosReadDir;
+	char* dossier = *argp;
+	cell_nom *celluleCourante;
+	cell_nom *celluleSuivante;
+	//Ouverture du fichier
+	// directory = opendir((char *)argp);
+	directory = opendir(dossier);
+	if(directory==NULL)
+	{
+		perror("Erreur d'ouverture du dossier ");
+		printf("Dossier : \"%s\" \n",dossier);
+		
+		//Il y a une erreur, fin du programme
+		resultatTmp.erreur=3;
+		result = resultatTmp;
+		printf("\nErreur retournée (0 = OK) : %d\n", result.erreur);
+		return &result;
+	}
+	//initialisation de cellule courante
+	celluleCourante=malloc(10*sizeof(char));
+	//initialisation de la cellule suivante
+	celluleSuivante=celluleCourante;
+
+	//initialisation de resultatTmp
+	resultatTmp.ls_res_u.liste=celluleCourante;
+
+	while ((infosReadDir = readdir(directory)) != NULL)
+	{	
+		celluleCourante->suivant=celluleSuivante;
+		celluleCourante=celluleSuivante;
+		//On prepare la cellule a recevoir les valeurs
+		celluleCourante->nom=calloc(MAXNOM,sizeof(char));
+		celluleCourante->suivant=NULL;		
+		//On ecrit les valeurs
+		strcpy(celluleCourante->nom, infosReadDir->d_name);
+		//initialisation de la cellule suivante
+		celluleSuivante=malloc(10*sizeof(char));
+
+	}
+	closedir(directory);	
+	resultatTmp.erreur=0;
 	result = resultatTmp;
 	//Liberation des données dans la variable
 	xdr_free((xdrproc_t)xdr_type_nom,(char*)argp);
@@ -102,76 +95,64 @@ ls_1_svc(type_nom *argp, struct svc_req *rqstp)
 	return &result;	
 }
 
-read_res *
-read_1_svc(type_nom *argp, struct svc_req *rqstp)
+read_res * read_1_svc(type_nom *argp, struct svc_req *rqstp)
 {
 	printf("----------------Debut du programme read----------------\n\n");
-	static read_res  result;
-	//Initialisation de la variable de retour
+	static read_res  result;		//Initialisation de la variable de retour 
 	read_res resultatTmp;
 	resultatTmp.erreur=1;
-	
-	//verification de l'authentification
-	resultatTmp.erreur=connexionValide(rqstp);
-	if(resultatTmp.erreur<=2)
+	resultatTmp.erreur=connexionValide(rqstp); //verification de l'authentification
+	if(resultatTmp.erreur>1)
 	{
-
-		//Initialisation des varibles de parcour/sauvegarde du document
-		DIR *directory;
-		FILE *file;
-		struct dirent *infosReadDir;
-		char* fichier = *argp;
-
-		cell_bloc *celluleCourante;
-		cell_bloc *celluleSuivante;
-		char buffer[MAXBLOC];
-
-		//Verification que le document est un fichier et non un repertoire
-		directory = opendir(fichier);
-		if(directory!=NULL){
-			closedir(directory);
-			resultatTmp.erreur=4;
-		}
-		else
-		{
-			//Ouverture du fichier
-			file = fopen(fichier,"r");
-			if(file==NULL)
-			{
-				perror("Erreur d'ouverture du fichier ");
-				resultatTmp.erreur=5;
-			}
-			//Si le fichier est ouvert sans erreur
-			else
-			{
-				//initialisation de cellule courante
-				celluleCourante=calloc(MAXBLOC,sizeof(char));
-				celluleCourante->bloc=calloc(MAXBLOC,sizeof(char));
-				celluleCourante->suivant=NULL;
-
-				//initialisation de la cellule suivante
-				celluleSuivante=celluleCourante;
-
-				//initialisation de resultatTmp
-				resultatTmp.read_res_u.fichier=celluleCourante;
-
-				while (fgets(buffer, MAXBLOC, file)!=NULL)
-				{
-					celluleCourante->suivant=celluleSuivante;
-
-					celluleCourante=celluleSuivante;
-					celluleCourante->bloc= calloc(MAXBLOC,sizeof(char));
-					celluleCourante->suivant=NULL;
-
-					strcpy(celluleCourante->bloc, buffer);
-
-					celluleSuivante=calloc(MAXBLOC,sizeof(char));
-				}
-				fclose(file);	
-				resultatTmp.erreur=0;
-			}
-		}
+		result = resultatTmp;
+		printf("\nErreur retournée (0 = OK) : %d\n", result.erreur);
+		return &result;
 	}
+	//Initialisation des varibles de parcour/sauvegarde du document
+	DIR *directory;
+	FILE *file;
+	struct dirent *infosReadDir;
+	char* fichier = *argp;
+	cell_bloc *celluleCourante;
+	cell_bloc *celluleSuivante;
+	char buffer[MAXBLOC];
+	directory = opendir(fichier);	//Verification que le path est un fichier et non un dossier
+	if(directory!=NULL)			//Le path mène à un dossier, erreur
+	{
+		closedir(directory);
+		resultatTmp.erreur=3;		
+		result = resultatTmp;
+		printf("\nErreur retournée (0 = OK) : %d\n", result.erreur);
+		return &result;
+	}
+	file = fopen(fichier,"r");	//Ouverture du fichier
+	if(file==NULL) 			//Il y a une erreur, fin du programme
+	{
+		perror("Erreur d'ouverture du fichier ");
+		
+		resultatTmp.erreur=4;
+		result = resultatTmp;
+		printf("\nErreur retournée (0 = OK) : %d\n", result.erreur);
+		return &result;
+	}
+	//initialisation de cellule courante
+	celluleCourante=calloc(MAXBLOC,sizeof(char));
+	celluleCourante->bloc=calloc(MAXBLOC,sizeof(char));
+	celluleCourante->suivant=NULL;
+	celluleSuivante=celluleCourante;				//initialisation de la cellule suivante
+	resultatTmp.read_res_u.fichier=celluleCourante;	//initialisation de resultatTmp
+
+	while (fgets(buffer, MAXBLOC, file)!=NULL)
+	{
+		celluleCourante->suivant=celluleSuivante;
+		celluleCourante=celluleSuivante;
+		celluleCourante->bloc= calloc(MAXBLOC,sizeof(char));
+		celluleCourante->suivant=NULL;
+		strcpy(celluleCourante->bloc, buffer);
+		celluleSuivante=calloc(MAXBLOC,sizeof(char));
+	}
+	fclose(file);	
+	resultatTmp.erreur=0;//Fin du programme 
 	result = resultatTmp;
 	xdr_free((xdrproc_t)xdr_type_nom,(char*)argp);
 	printf("\n\nErreur retournée (0 = OK) : %d\n", result.erreur);
@@ -189,43 +170,42 @@ write_1_svc(write_parm *argp, struct svc_req *rqstp)
 	
 	//verification de l'authentification
 	erreur=connexionValide(rqstp);
-	if(erreur<=2)
+	if(erreur>1)
 	{
-
-		//Initialisation des variables
-		FILE *file;
-		char* fichier=argp->nom;
-		cell_bloc *celluleCourante = argp->donnees;
-
-		//Choix d'ecraser le fichier à ecrire
-		if(argp->ecraser)
-		{
-			file = fopen(fichier,"w");
-		}
-		else
-		{
-			file = fopen(fichier,"a");
-		}
-		
-		//ouverture du fichier
-		if(file==NULL)
-		{
-			perror("Erreur d'ouverture du fichier ");
-			printf("Fichier : \"%s\" \n",fichier);
-			erreur=4;
-		}
-		else
-		{
-			//Parcour de la liste chainée donnée en paramètres et copie dans le fichier
-			while(celluleCourante!=NULL)
-			{	
-				fputs(celluleCourante->bloc,file);
-				celluleCourante=celluleCourante->suivant;
-			}
-			erreur=0;
-			fclose(file);
-		}
+		printf("\nErreur retournée (0 = OK) : %d\n", result);
+		return &result;
 	}
+
+	//Initialisation des variables
+	FILE *file;
+	char* fichier=argp->nom;
+	cell_bloc *celluleCourante = argp->donnees;
+
+	//Choix d'ecraser le fichier à ecrire
+	if(argp->ecraser)
+	{file = fopen(fichier,"w");}
+	else
+	{file = fopen(fichier,"a");}
+	
+	//ouverture du fichier
+	if(file==NULL)
+	{
+		perror("Erreur d'ouverture du fichier ");
+
+		//Il y a une erreur, fin du programme
+		result=3;
+		printf("\nErreur retournée (0 = OK) : %d\n", result);
+		return &result;
+	}
+
+	//Parcour de la liste chainée donnée en paramètres et copie dans le fichier
+	while(celluleCourante!=NULL)
+	{	
+		fputs(celluleCourante->bloc,file);
+		celluleCourante=celluleCourante->suivant;
+	}
+	erreur=0;
+	fclose(file);
 	result=erreur;
 	xdr_free((xdrproc_t)xdr_write_parm,(char*)argp);
 	printf("\n\nErreur retournée (0 = OK) : %d\n", result);
